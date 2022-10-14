@@ -9,11 +9,15 @@ const { createAudioPlayer, createAudioResource, entersState, joinVoiceChannel, N
 const { FFmpeg } = require('prism-media')
 const { getAudioDevices } = require('./audio-devices')
 
+let connection
+
 const resourcesPath = process.env.NODE_ENV === 'development'
   ? __dirname
   : process.resourcesPath
 
-let connection
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
+})
 
 const player = createAudioPlayer({
   behaviors: {
@@ -23,7 +27,12 @@ const player = createAudioPlayer({
 })
 
 function leave () {
-  connection?.destroy()
+  if (connection == null) {
+    return
+  }
+
+  connection.destroy()
+  connection = null
 }
 
 async function join (channel) {
@@ -74,7 +83,7 @@ function selectAudioDevice (audioDevice) {
   )
 }
 
-async function buildTemplate (client) {
+async function buildTemplate () {
   const inputs = [
     { label: 'None', type: 'radio', click: () => selectAudioDevice(null) }
   ]
@@ -93,27 +102,25 @@ async function buildTemplate (client) {
     { label: 'None', type: 'radio', click: leave }
   ]
 
-  const guilds = await client.guilds.fetch()
-  const ops = guilds.map(async ref => {
+  async function getVoiceChannels (ref) {
     const guild = await ref.fetch()
     const channels = await guild.channels.fetch()
 
-    channels.forEach(channel => {
-      if (!channel.isVoiceBased()) {
-        return
+    for (const [, channel] of channels) {
+      if (channel.isVoiceBased()) {
+        const output = {
+          label: `${guild.name} > ${channel.name}`,
+          type: 'radio',
+          click: () => join(channel)
+        }
+
+        outputs.push(output)
       }
+    }
+  }
 
-      const output = {
-        label: `${guild.name} > ${channel.name}`,
-        type: 'radio',
-        click: () => join(channel)
-      }
-
-      outputs.push(output)
-    })
-  })
-
-  await Promise.all(ops)
+  const guilds = await client.guilds.fetch()
+  await Promise.all(guilds.map(getVoiceChannels))
 
   return [
     { label: 'Input', submenu: inputs },
@@ -127,13 +134,9 @@ async function main () {
   app.on('before-quit', leave)
 
   const token = await fs.readFile(path.join(__dirname, 'token.txt'), 'utf8')
-  console.log(token)
-  console.log(path.join(__dirname, 'token.txt'))
-
-  const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] })
   await client.login(token.trim())
 
-  const template = await buildTemplate(client)
+  const template = await buildTemplate()
   const contextMenu = Menu.buildFromTemplate(template)
 
   const tray = new Tray(path.join(resourcesPath, 'icon.ico'))
