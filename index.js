@@ -1,51 +1,53 @@
 require('./patch')
 
+const discord = require('discord.js')
 const fs = require('fs/promises')
 const path = require('path')
+const prism = require('prism-media')
+const voice = require('@discordjs/voice')
 
 const { Menu, Tray, app, dialog } = require('electron')
-const { Client, GatewayIntentBits } = require('discord.js')
-const { createAudioPlayer, createAudioResource, entersState, joinVoiceChannel, NoSubscriberBehavior, StreamType, VoiceConnectionStatus } = require('@discordjs/voice')
-const { FFmpeg } = require('prism-media')
+const { Server } = require('./server')
 const { getAudioDevices } = require('./audio-devices')
 
 let connection
 
-const resourcesPath = process.env.NODE_ENV === 'development'
-  ? __dirname
-  : process.resourcesPath
-
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
+const client = new discord.Client({
+  intents: [discord.GatewayIntentBits.Guilds, discord.GatewayIntentBits.GuildVoiceStates]
 })
 
-const player = createAudioPlayer({
+const player = voice.createAudioPlayer({
   behaviors: {
-    noSubscriber: NoSubscriberBehavior.Play,
+    noSubscriber: voice.NoSubscriberBehavior.Play,
     maxMissedFrames: 250
   }
 })
 
+const server = new Server(player)
+const resourcesPath = process.env.NODE_ENV === 'development'
+  ? __dirname
+  : process.resourcesPath
+
 function leave () {
-  if (connection == null) {
+  if (connection === undefined) {
     return
   }
 
   connection.destroy()
-  connection = null
+  connection = undefined
 }
 
 async function join (channel) {
   leave()
 
-  connection = joinVoiceChannel({
+  connection = voice.joinVoiceChannel({
     adapterCreator: channel.guild.voiceAdapterCreator,
     guildId: channel.guild.id,
     channelId: channel.id
   })
 
   try {
-    await entersState(connection, VoiceConnectionStatus.Ready, 30_000)
+    await voice.entersState(connection, voice.VoiceConnectionStatus.Ready, 30_000)
   } catch (err) {
     connection.destroy()
     throw err
@@ -54,13 +56,20 @@ async function join (channel) {
   connection.subscribe(player)
 }
 
-function selectAudioDevice (audioDevice) {
-  if (audioDevice === null) {
-    player.stop()
-    return
-  }
+function selectNone () {
+  server.stop()
+  player.stop()
+}
 
-  const input = new FFmpeg({
+function selectYouTube () {
+  selectNone()
+  server.start()
+}
+
+function selectAudioDevice (audioDevice) {
+  selectNone()
+
+  const stream = new prism.FFmpeg({
     args: [
       '-analyzeduration', '0',
       '-loglevel', '0',
@@ -74,10 +83,10 @@ function selectAudioDevice (audioDevice) {
   })
 
   player.play(
-    createAudioResource(
-      input,
+    voice.createAudioResource(
+      stream,
       {
-        inputType: StreamType.Raw
+        inputType: voice.StreamType.Raw
       }
     )
   )
@@ -85,7 +94,8 @@ function selectAudioDevice (audioDevice) {
 
 async function buildTemplate () {
   const inputs = [
-    { label: 'None', type: 'radio', click: () => selectAudioDevice(null) }
+    { label: 'None', type: 'radio', click: selectNone },
+    { label: 'YouTube API', type: 'radio', click: selectYouTube }
   ]
 
   for (const audioDevice of await getAudioDevices()) {
