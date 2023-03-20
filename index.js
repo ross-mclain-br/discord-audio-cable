@@ -24,9 +24,6 @@ const player = voice.createAudioPlayer({
 })
 
 const server = new Server(player)
-const resourcesPath = process.env.NODE_ENV === 'development'
-  ? __dirname
-  : process.resourcesPath
 
 function leave () {
   if (connection === undefined) {
@@ -140,10 +137,18 @@ async function buildTemplate () {
   ]
 }
 
+const rootPath = process.env.NODE_ENV === 'development'
+  ? __dirname
+  : process.env.PORTABLE_EXECUTABLE_DIR
+
+const resourcesPath = process.env.NODE_ENV === 'development'
+  ? __dirname
+  : process.resourcesPath
+
 async function main () {
   app.on('before-quit', leave)
 
-  const token = await fs.readFile(path.join(__dirname, 'token.txt'), 'utf8')
+  const token = await fs.readFile(path.join(rootPath, 'token.txt'), 'utf8')
   await client.login(token.trim())
 
   const template = await buildTemplate()
