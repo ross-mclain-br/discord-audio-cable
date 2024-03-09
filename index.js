@@ -43,13 +43,7 @@ async function join (channel) {
     channelId: channel.id
   })
 
-  try {
-    await voice.entersState(connection, voice.VoiceConnectionStatus.Ready, 30_000)
-  } catch (err) {
-    connection.destroy()
-    throw err
-  }
-
+  await voice.entersState(connection, voice.VoiceConnectionStatus.Ready, 30_000)
   connection.subscribe(player)
 }
 
@@ -159,7 +153,9 @@ async function main () {
   tray.setContextMenu(contextMenu)
 }
 
-app.whenReady().then(main).catch(error => {
+process.on('unhandledRejection', error => {
   dialog.showMessageBoxSync({ title: 'Discord Audio Cable', message: error.message, type: 'error' })
   app.quit()
 })
+
+app.whenReady().then(main)
