@@ -1,14 +1,48 @@
 {
+  "$schema": "https://json.schemastore.org/package",
   "name": "discord-audio-cable",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "An audio streaming Discord bot",
-  "main": "index.js",
+  "author": "Victor Andrade de Almeida",
+  "license": "MIT",
+  "keywords": [
+    "discord",
+    "bot",
+    "audio",
+    "stream"
+  ],
+  "main": "dist/index.js",
   "scripts": {
     "start": "env NODE_ENV=development electron .",
-    "app:dist": "electron-builder"
+    "lint": "eslint .",
+    "format": "prettier -w .",
+    "build": "rm -rf dist && tsc",
+    "package": "electron-builder"
+  },
+  "dependencies": {
+    "@discordjs/voice": "^0.17.0",
+    "discord.js": "^14.16.2",
+    "express": "^4.21.0",
+    "ffmpeg-static": "^5.2.0",
+    "libsodium-wrappers": "^0.7.15",
+    "opusscript": "^0.0.8",
+    "play-dl": "^1.9.7",
+    "prism-media": "^1.3.5",
+    "yt-stream": "^1.7.4"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "electron": "^32.1.2",
+    "electron-builder": "^25.1.6",
+    "eslint": "^9.11.1",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3"
   },
   "build": {
     "appId": "com.vctandrade.discord-audio-cable",
+    "directories": {
+      "output": "release"
+    },
     "extraResources": [
       "./icon.ico"
     ],
@@ -16,31 +50,5 @@
       "target": "portable",
       "icon": "./icon.ico"
     }
-  },
-  "keywords": [
-    "discord",
-    "bot",
-    "audio",
-    "stream"
-  ],
-  "author": "Victor Andrade de Almeida",
-  "license": "MIT",
-  "dependencies": {
-    "@discordjs/voice": "^0.16.1",
-    "discord.js": "^14.14.1",
-    "ffmpeg-static": "^5.2.0",
-    "libsodium-wrappers": "^0.7.13",
-    "opusscript": "^0.0.8",
-    "play-dl": "^1.9.7",
-    "prism-media": "^1.3.5"
-  },
-  "devDependencies": {
-    "electron": "^29.1.1",
-    "electron-builder": "^24.13.3",
-    "eslint": "^8.57.0",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-n": "^16.6.2",
-    "eslint-plugin-promise": "^6.1.1"
   }
 }
