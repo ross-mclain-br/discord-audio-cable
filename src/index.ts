@@ -96,7 +96,7 @@ function selectAudioDevice(audioDevice: string) {
   player.play(
     createAudioResource(stream, {
       inputType: StreamType.Raw,
-    })
+    }),
   );
 }
 
@@ -139,7 +139,7 @@ async function buildTemplate(): Promise<MenuItemConstructorOptions[]> {
 
         outputs.push(output);
       }
-    })
+    }),
   );
 
   return [

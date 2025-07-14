@@ -20,7 +20,7 @@
     "package": "electron-builder"
   },
   "dependencies": {
-    "@discordjs/voice": "^0.17.0",
+    "@discordjs/voice": "^0.18.0",
     "discord.js": "^14.16.2",
     "express": "^4.21.0",
     "ffmpeg-static": "^5.2.0",
@@ -31,11 +31,12 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
-    "electron": "^32.1.2",
-    "electron-builder": "^25.1.6",
+    "electron": "^37.2.1",
+    "electron-builder": "^26.0.18",
     "eslint": "^9.11.1",
     "eslint-config-prettier": "^9.1.0",
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "typescript-eslint": "^8.36.0"
   },
   "build": {
     "appId": "com.vctandrade.discord-audio-cable",
